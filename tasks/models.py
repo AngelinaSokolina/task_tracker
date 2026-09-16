@@ -3,14 +3,14 @@ from django.db import models
 
 
 class TaskType(models.TextChoices):
-    URGENT = 'urgent', 'Срочная'
-    DAILY = 'daily', 'Повседневная'
-    INFO = 'info', 'Информационная'
+    URGENT = "urgent", "Срочная"
+    DAILY = "daily", "Повседневная"
+    INFO = "info", "Информационная"
 
 
 class TaskStatus(models.TextChoices):
-    IN_PROGRESS = 'in_progress', 'В процессе'
-    DONE = 'done', 'Выполнено'
+    IN_PROGRESS = "in_progress", "В процессе"
+    DONE = "done", "Выполнено"
 
 
 class Task(models.Model):
@@ -21,73 +21,75 @@ class Task(models.Model):
       - синяя    — daily
       - зелёная  — info
     """
-    title = models.CharField(max_length=255, verbose_name='Заголовок')
-    description = models.TextField(blank=True, verbose_name='Комментарий')
+
+    title = models.CharField(max_length=255, verbose_name="Заголовок")
+    description = models.TextField(blank=True, verbose_name="Комментарий")
 
     type = models.CharField(
         max_length=20,
         choices=TaskType.choices,
         default=TaskType.DAILY,
-        verbose_name='Степень задачи',
+        verbose_name="Степень задачи",
     )
 
     assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='assigned_tasks',
-        verbose_name='Исполнитель',
+        related_name="assigned_tasks",
+        verbose_name="Исполнитель",
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='created_tasks',
-        verbose_name='Отправитель',
+        related_name="created_tasks",
+        verbose_name="Отправитель",
     )
 
-    date = models.DateField(verbose_name='Дата задачи')
+    date = models.DateField(verbose_name="Дата задачи")
 
     status = models.CharField(
         max_length=20,
         choices=TaskStatus.choices,
         default=TaskStatus.IN_PROGRESS,
-        verbose_name='Статус',
+        verbose_name="Статус",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Задача'
-        verbose_name_plural = 'Задачи'
-        ordering = ['-date', '-created_at']
+        verbose_name = "Задача"
+        verbose_name_plural = "Задачи"
+        ordering = ["-date", "-created_at"]
 
     def __str__(self):
-        return f'{self.get_type_display()}: {self.title}'
+        return f"{self.get_type_display()}: {self.title}"
 
 
 class Comment(models.Model):
     """
     Комментарий к задаче. Показывается в карточке задачи.
     """
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name='Задача',
+        related_name="comments",
+        verbose_name="Задача",
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name='Автор',
+        related_name="comments",
+        verbose_name="Автор",
     )
-    text = models.TextField(verbose_name='Текст')
+    text = models.TextField(verbose_name="Текст")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
-        ordering = ['created_at']
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
+        ordering = ["created_at"]
 
     def __str__(self):
-        return f'Комментарий от {self.author} к задаче #{self.task_id}'
+        return f"Комментарий от {self.author} к задаче #{self.task_id}"

@@ -1,5 +1,6 @@
 import secrets
-from rest_framework import viewsets, status, permissions
+
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -7,8 +8,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import CustomUser
 from .serializers import (
     CustomTokenObtainPairSerializer,
-    UserSerializer,
     RegisterEmployeeSerializer,
+    UserSerializer,
 )
 
 
@@ -22,15 +23,15 @@ class IsManager(permissions.BasePermission):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all().order_by('full_name')
+    queryset = CustomUser.objects.all().order_by("full_name")
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     @action(
         detail=False,
-        methods=['post'],
+        methods=["post"],
         permission_classes=[IsManager],
-        url_path='register',
+        url_path="register",
     )
     def register_employee(self, request):
         """POST /api/users/register/ — регистрация сотрудника руководителем."""
@@ -44,16 +45,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(
             {
-                'id': user.id,
-                'phone': user.phone,
-                'full_name': user.full_name,
-                'position': user.position,
-                'generated_password': generated_password,
+                "id": user.id,
+                "phone": user.phone,
+                "full_name": user.full_name,
+                "position": user.position,
+                "generated_password": generated_password,
             },
             status=status.HTTP_201_CREATED,
         )
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
         """GET /api/users/me/ — текущий пользователь."""
         return Response(UserSerializer(request.user).data)

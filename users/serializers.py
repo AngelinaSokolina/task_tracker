@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import CustomUser
 
 
@@ -9,14 +10,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['role'] = user.role
-        token['full_name'] = user.full_name
+        token["role"] = user.role
+        token["full_name"] = user.full_name
         return token
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        data['role'] = self.user.role
-        data['full_name'] = self.user.full_name
+        data["role"] = self.user.role
+        data["full_name"] = self.user.full_name
         return data
 
 
@@ -25,11 +26,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'phone', 'full_name', 'position', 'role', 'password']
-        read_only_fields = ['id']
+        fields = ["id", "phone", "full_name", "position", "role", "password"]
+        read_only_fields = ["id"]
 
     def create(self, validated_data):
-        password = validated_data.pop('password', None)
+        password = validated_data.pop("password", None)
         user = CustomUser(**validated_data)
         if password:
             user.set_password(password)
@@ -39,9 +40,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RegisterEmployeeSerializer(serializers.ModelSerializer):
     """Регистрация сотрудника руководителем — возвращает сгенерированный пароль."""
+
     password = serializers.CharField(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'phone', 'full_name', 'position', 'password']
-        read_only_fields = ['id', 'password']
+        fields = ["id", "phone", "full_name", "position", "password"]
+        read_only_fields = ["id", "password"]

@@ -30,7 +30,7 @@ class TaskModelTests(TestCase):
             author=self.manager,
             date=date(2026, 9, 15),
         )
-        self.assertEqual(task.status, TaskStatus.IN_PROGRESS)
+        self.assertEqual(task.status, TaskStatus.PENDING)
         self.assertEqual(task.type, TaskType.URGENT)
         self.assertEqual(str(task), "Срочная: Задача")
 

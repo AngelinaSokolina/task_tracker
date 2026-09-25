@@ -41,6 +41,7 @@ class TaskAPITests(APITestCase):
             assignee=self.employee,
             author=self.manager,
             date=date(2026, 9, 15),
+            status=TaskStatus.IN_PROGRESS,
         )
         self.task_for_other = Task.objects.create(
             title="Задача для другого",
@@ -48,6 +49,7 @@ class TaskAPITests(APITestCase):
             assignee=self.other_employee,
             author=self.manager,
             date=date(2026, 9, 15),
+            status=TaskStatus.IN_PROGRESS,
         )
 
     def test_anonymous_cannot_list_tasks(self):
@@ -150,6 +152,7 @@ class CommentAPITests(APITestCase):
             assignee=self.employee,
             author=self.manager,
             date=date(2026, 9, 15),
+            status=TaskStatus.IN_PROGRESS,
         )
 
     def test_add_comment(self):

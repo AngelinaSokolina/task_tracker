@@ -4,7 +4,7 @@ Backend-сервис для трекера задач сотрудников. Р
 
 ## Стек технологий
 
-- **Python 3.12** + **Django 6.0**
+- **Python 3.14** + **Django 6.0**
 - **Django REST Framework** — API
 - **PostgreSQL 15** — база данных
 - **JWT** (`djangorestframework-simplejwt`) — авторизация по номеру телефона
@@ -17,7 +17,6 @@ Backend-сервис для трекера задач сотрудников. Р
 ## Архитектура
 
 [Браузер] → [Nginx:80] → [Django + Gunicorn:8000] → [PostgreSQL:5432]
-
 
 ## Роли
 
@@ -32,13 +31,14 @@ Backend-сервис для трекера задач сотрудников. Р
 |-----|-------------------|
 | `urgent` — срочная | 🔴 красный |
 | `daily` — повседневная | 🔵 синий |
-| `info` — информационная | 🟢  зелёный |
+| `info` — информационная | 🟢 зелёный |
 
 ## Статусы задач
 
 - `in_progress` — в процессе
 - `done` — выполнено
--  `pending`—  не взята в работу 
+- `pending` — не взята в работу
+
 ## Запуск через Docker (рекомендуемый способ)
 
 ### 1. Клонировать репозиторий
@@ -49,19 +49,23 @@ cd task_tracker
 ```
 
 ### 2. Создать .env из шаблона
+
 ```
 cp .env.docker .env
 ```
 
 ### 3. Запустить контейнеры
+
 ```
 docker compose up -d --build
 ```
 
 ### 4. Создать суперпользователя
+
 ```
 docker compose exec web python manage.py createsuperuser
 ```
+
 Вас спросят:
 
 Телефон (логин) — например, +79990000000
@@ -71,6 +75,7 @@ docker compose exec web python manage.py createsuperuser
 Пароль — минимум 8 символов
 
 ### 5. Открыть в браузере
+
 Swagger: http://localhost/docs/
 
 ReDoc: http://localhost/redoc/
@@ -78,10 +83,13 @@ ReDoc: http://localhost/redoc/
 Админка: http://localhost/admin/
 
 ### Остановка
+
 ```
 docker compose down
 ```
+
 ## Запуск без Docker (для разработки)
+
 ### 1. Создать и активировать виртуальное окружение
 
 ```
@@ -89,6 +97,7 @@ python -m venv .venv
 source .venv/bin/activate      # Mac/Linux
 .venv\Scripts\activate         # Windows
 ```
+
 ### 2. Установить зависимости
 
 ```
@@ -107,91 +116,101 @@ docker compose up -d db
 python manage.py migrate
 python manage.py runserver
 ```
+
 Сервер будет доступен по адресу: http://127.0.0.1:8000
 
 ## API эндпоинты
 
 ### Авторизация
 
-Метод | URL | Описание  
----|---|---  
-POST | `/api/token/` | Получение JWT-токенов по телефону и паролю  
-POST | `/api/token/refresh/` | Обновление access-токена  
+| Метод | URL | Описание |
+|-------|-----|----------|
+| POST | `/api/token/` | Получение JWT-токенов по телефону и паролю |
+| POST | `/api/token/refresh/` | Обновление access-токена |
 
 ### Пользователи
-Метод | URL | Кто | Описание  
----|---|---|---  
-POST | `/api/users/register/` | manager | Регистрация сотрудника (возвращает сгенерированный пароль) 
-GET | `/api/users/me/` | любой | Текущий пользователь  
-GET | `/api/users/` | любой | Список пользователей  
-GET | `/api/users/{id}/` | любой | Один пользователь  
-PUT | `/api/users/{id}/` | любой | Обновление пользователя  
-PATCH | `/api/users/{id}/` | любой | Частичное обновление  
-DELETE | `/api/users/{id}/` | любой | Удаление пользователя  
-GET | `/api/users/busy/` | manager | Сотрудники, отсортированные по числу активных задач |
+
+| Метод | URL | Кто | Описание |
+|-------|-----|-----|----------|
+| POST | `/api/users/register/` | manager | Регистрация сотрудника (возвращает сгенерированный пароль) |
+| GET | `/api/users/me/` | любой | Текущий пользователь |
+| GET | `/api/users/` | любой | Список пользователей |
+| GET | `/api/users/{id}/` | любой | Один пользователь |
+| PUT | `/api/users/{id}/` | любой | Обновление пользователя |
+| PATCH | `/api/users/{id}/` | любой | Частичное обновление |
+| DELETE | `/api/users/{id}/` | любой | Удаление пользователя |
+| GET | `/api/users/busy/` | manager | Сотрудники, отсортированные по числу активных задач |
 
 ### Задачи
-Метод | URL | Кто | Описание  
----|---|---|---  
-GET | `/api/tasks/` | все | Список задач (manager — все, employee — только свои)  
-POST | `/api/tasks/` | manager | Создание задачи  
-GET | `/api/tasks/{id}/` | все | Одна задача  
-PUT | `/api/tasks/{id}/` | manager | Полное обновление задачи  
-PATCH | `/api/tasks/{id}/` | manager | Частичное обновление задачи  
-DELETE | `/api/tasks/{id}/` | manager | Удаление задачи  
+
+| Метод | URL | Кто | Описание |
+|-------|-----|-----|----------|
+| GET | `/api/tasks/` | все | Список задач (manager — все, employee — только свои) |
+| POST | `/api/tasks/` | manager | Создание задачи |
+| GET | `/api/tasks/{id}/` | все | Одна задача |
+| PUT | `/api/tasks/{id}/` | manager | Полное обновление задачи |
+| PATCH | `/api/tasks/{id}/` | manager | Частичное обновление задачи |
+| DELETE | `/api/tasks/{id}/` | manager | Удаление задачи |
 | PATCH | `/api/tasks/{id}/status/` | любой | Смена статуса. При `pending` обязателен `comment` с причиной |
 | GET | `/api/tasks/important/` | все | Важные задачи (срочные и просроченные). Руководителю — с подбором исполнителей |
 
 ### Комментарии
-Метод | URL | Описание  
----|---|---  
-GET | `/api/tasks/{task_id}/comments/` | Список комментариев задачи  
-POST | `/api/tasks/{task_id}/comments/` | Добавить комментарий  
+
+| Метод | URL | Описание |
+|-------|-----|----------|
+| GET | `/api/tasks/{task_id}/comments/` | Список комментариев задачи |
+| POST | `/api/tasks/{task_id}/comments/` | Добавить комментарий |
 
 ### Фильтры для /api/tasks/
-Параметр | Значения              | Описание  
----|-----------------------|---  
-date | YYYY-MM-DD            | Фильтр по дате  
-type | urgent / daily / info | Фильтр по типу задачи  
-status | in_progress / done / pending | Фильтр по статусу  
-assignee | {id}                  | Фильтр по исполнителю  
+
+| Параметр | Значения | Описание |
+|----------|----------|----------|
+| date | YYYY-MM-DD | Фильтр по дате |
+| type | urgent / daily / info | Фильтр по типу задачи |
+| status | in_progress / done / pending | Фильтр по статусу |
+| assignee | {id} | Фильтр по исполнителю |
 
 ### Типы задач
-Тип | Цвет на календаре | Описание  
----|---|---  
-urgent | 🔴 красный | Срочная задача  
-daily | 🔵 синий | Повседневная задача  
-info | 🟢 зелёный | Информационная задача  
+
+| Тип | Цвет на календаре | Описание |
+|-----|-------------------|----------|
+| urgent | 🔴 красный | Срочная задача |
+| daily | 🔵 синий | Повседневная задача |
+| info | 🟢 зелёный | Информационная задача |
 
 ### Статусы задач
-Статус | Описание  
----|---  
-in_progress | В процессе  
-done | Выполнено  
-pending | Не взята в работу |
+
+| Статус | Описание |
+|--------|----------|
+| in_progress | В процессе |
+| done | Выполнено |
+| pending | Не взята в работу |
 
 ### Роли
-Роль | Возможности  
----|---  
-Руководитель (manager) | Видит все задачи, создаёт задачи, регистрирует сотрудников, смотрит статусы  
-Сотрудник (employee) | Видит только свои задачи, меняет их статус, оставляет комментарии  
+
+| Роль | Возможности |
+|------|-------------|
+| Руководитель (manager) | Видит все задачи, создаёт задачи, регистрирует сотрудников, смотрит статусы |
+| Сотрудник (employee) | Видит только свои задачи, меняет их статус, оставляет комментарии |
 
 ### Переменные окружения
-Переменная | Описание | Пример  
----|---|---  
-SECRET_KEY | Секретный ключ Django | django-insecure-...  
-DEBUG | Режим отладки | False  
-ALLOWED_HOSTS | Разрешённые хосты | localhost,127.0.0.1  
-POSTGRES_DB / NAME | Имя базы данных | task_tracker_db  
-POSTGRES_USER / USER | Пользователь БД | postgres  
-POSTGRES_PASSWORD / PASSWORD | Пароль БД | postgres  
-HOST | Хост БД | db (в Docker), localhost (локально)  
-PORT | Порт БД | 5432 (в Docker), 5433 (локально)  
-CORS_ALLOWED_ORIGINS | Разрешённые источники CORS | http://localhost  
 
+| Переменная | Описание | Пример |
+|------------|----------|--------|
+| SECRET_KEY | Секретный ключ Django | django-insecure-... |
+| DEBUG | Режим отладки | False |
+| ALLOWED_HOSTS | Разрешённые хосты | localhost,127.0.0.1 |
+| POSTGRES_DB / NAME | Имя базы данных | task_tracker_db |
+| POSTGRES_USER / USER | Пользователь БД | postgres |
+| POSTGRES_PASSWORD / PASSWORD | Пароль БД | postgres |
+| HOST | Хост БД | db (в Docker), localhost (локально) |
+| PORT | Порт БД | 5432 (в Docker), 5433 (локально) |
+| CORS_ALLOWED_ORIGINS | Разрешённые источники CORS | http://localhost |
 
 ## Примеры запросов
+
 ### Регистрация сотрудника (только manager)
+
 ```commandline
 curl -X POST http://localhost/api/users/register/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
@@ -202,9 +221,11 @@ curl -X POST http://localhost/api/users/register/ \
     "position": "Бухгалтер"
   }'
 ```
+
 **Ответ:**
 
-```{
+```
+{
   "id": 2,
   "phone": "+79991112233",
   "full_name": "Иванов Иван Иванович",
@@ -214,6 +235,7 @@ curl -X POST http://localhost/api/users/register/ \
 ```
 
 ### Создание задачи (только manager)
+
 ```commandline
 curl -X POST http://localhost/api/tasks/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
@@ -229,15 +251,17 @@ curl -X POST http://localhost/api/tasks/ \
 ```
 
 ### Смена статуса задачи (сотрудник)
+
 Обычная смена статуса — без комментария:
+
 ```
 curl -X PATCH http://localhost/api/tasks/1/status/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"status": "done"}'
-  ```
-Перевод в «не взята в работу» — комментарий с причиной обязателен:
+```
 
+Перевод в «не взята в работу» — комментарий с причиной обязателен:
 
 ```
 curl -X PATCH http://localhost/api/tasks/1/status/ \
@@ -245,12 +269,16 @@ curl -X PATCH http://localhost/api/tasks/1/status/ \
   -H "Content-Type: application/json" \
   -d '{"status": "pending", "comment": "Загружен другой задачей"}'
 ```
+
 ### Важные задачи
+
 ```
 curl http://localhost/api/tasks/important/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
+
 Ответ для руководителя (с подбором свободных исполнителей):
+
 ```
 {
   "tasks": [
@@ -268,13 +296,16 @@ curl http://localhost/api/tasks/important/ \
   ]
 }
 ```
+
 Ответ для сотрудника — только свои задачи, без suggested_assignees.
 
 ### Занятые сотрудники (только manager)
+
 ```
 curl http://localhost/api/users/busy/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
+
 Ответ:
 
 ```
@@ -290,12 +321,15 @@ curl http://localhost/api/users/busy/ \
 ```
 
 ## Тесты
+
 Проект покрыт тестами (покрытие 97%).
 
 ### Запуск всех тестов
+
 ```
 python manage.py test
 ```
+
 ### Запуск с покрытием
 
 ```
@@ -303,16 +337,16 @@ coverage run --source='.' manage.py test
 coverage report
 coverage html  # создаст отчёт htmlcov/index.html
 ```
-### Запуск всех тестов
-```
-python manage.py test
-```
-## Запуск отдельных приложений
+
+### Запуск отдельных приложений
+
 ```
 python manage.py test users
 python manage.py test tasks
 ```
+
 ## Линтинг и форматирование
+
 ```
 flake8 . --exclude=.venv,migrations,htmlcov --max-line-length=120 --extend-ignore=E203,W503
 black .
@@ -320,24 +354,19 @@ isort .
 ```
 
 ## CI/CD (GitHub Actions)
+
 Файл .github/workflows/ci.yml описывает пайплайн:
 
 1. test — запускается на push и PR:
-* Поднимает PostgreSQL
-* Устанавливает зависимости
-* Прогоняет flake8
-* Прогоняет тесты с проверкой покрытия (порог 75%)
+   - Поднимает PostgreSQL
+   - Устанавливает зависимости
+   - Прогоняет flake8
+   - Прогоняет тесты с проверкой покрытия (порог 75%)
 
 2. deploy — запускается только при push в main:
-* Подключается по SSH к серверу Yandex Cloud
-* Делает git pull и docker compose up -d --build
-
+   - Подключается по SSH к серверу Yandex Cloud
+   - Делает git pull и docker compose up -d --build
 
 ## Автор
+
 _Ангелина Соколовская_
-
-
-
-
- 
- 

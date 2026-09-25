@@ -4,7 +4,7 @@ Backend-сервис для трекера задач сотрудников. Р
 
 ## Стек технологий
 
-- **Python 3.14** + **Django 6.0**
+- **Python 3.12** + **Django 6.0**
 - **Django REST Framework** — API
 - **PostgreSQL 15** — база данных
 - **JWT** (`djangorestframework-simplejwt`) — авторизация по номеру телефона
@@ -16,9 +16,7 @@ Backend-сервис для трекера задач сотрудников. Р
 
 ## Архитектура
 
-```
 [Браузер] → [Nginx:80] → [Django + Gunicorn:8000] → [PostgreSQL:5432]
-```
 
 ## Роли
 
@@ -29,61 +27,64 @@ Backend-сервис для трекера задач сотрудников. Р
 
 ## Типы задач
 
-| Тип | Цвет на календаре | Описание |
-|-----|-------------------|----------|
-| `urgent` | 🔴 красный | Срочная задача |
-| `daily` | 🔵 синий | Повседневная задача |
-| `info` | 🟢 зелёный | Информационная задача |
+| Тип | Цвет на календаре |
+|-----|-------------------|
+| `urgent` — срочная | 🔴 красный |
+| `daily` — повседневная | 🔵 синий |
+| `info` — информационная | 🟢 зелёный |
 
 ## Статусы задач
 
-| Статус | Описание |
-|--------|----------|
-| `pending` | Не взята в работу |
-| `in_progress` | В процессе |
-| `done` | Выполнено |
+- `in_progress` — в процессе
+- `done` — выполнено
+- `pending` — не взята в работу
 
 ## Запуск через Docker (рекомендуемый способ)
 
 ### 1. Клонировать репозиторий
 
-```bash
+```
 git clone https://github.com/AngelinaSokolina/task_tracker.git
 cd task_tracker
 ```
 
-### 2. Создать `.env` из шаблона
+### 2. Создать .env из шаблона
 
-```bash
+```
 cp .env.docker .env
 ```
 
 ### 3. Запустить контейнеры
 
-```bash
+```
 docker compose up -d --build
 ```
 
 ### 4. Создать суперпользователя
 
-```bash
+```
 docker compose exec web python manage.py createsuperuser
 ```
 
 Вас спросят:
-- **Телефон (логин)** — например, `+79990000000`
-- **ФИО** — например, `Иванов Иван`
-- **Пароль** — минимум 8 символов
+
+Телефон (логин) — например, +79990000000
+
+ФИО — например, Иванов Иван
+
+Пароль — минимум 8 символов
 
 ### 5. Открыть в браузере
 
-- Swagger: http://localhost/docs/
-- ReDoc: http://localhost/redoc/
-- Админка: http://localhost/admin/
+Swagger: http://localhost/docs/
+
+ReDoc: http://localhost/redoc/
+
+Админка: http://localhost/admin/
 
 ### Остановка
 
-```bash
+```
 docker compose down
 ```
 
@@ -91,7 +92,7 @@ docker compose down
 
 ### 1. Создать и активировать виртуальное окружение
 
-```bash
+```
 python -m venv .venv
 source .venv/bin/activate      # Mac/Linux
 .venv\Scripts\activate         # Windows
@@ -99,19 +100,19 @@ source .venv/bin/activate      # Mac/Linux
 
 ### 2. Установить зависимости
 
-```bash
+```
 pip install -r requirements.txt
 ```
 
 ### 3. Поднять только базу данных в Docker
 
-```bash
+```
 docker compose up -d db
 ```
 
 ### 4. Применить миграции и запустить сервер
 
-```bash
+```
 python manage.py migrate
 python manage.py runserver
 ```
@@ -160,20 +161,57 @@ python manage.py runserver
 | GET | `/api/tasks/{task_id}/comments/` | Список комментариев задачи |
 | POST | `/api/tasks/{task_id}/comments/` | Добавить комментарий |
 
-### Фильтры для `/api/tasks/`
+### Фильтры для /api/tasks/
 
 | Параметр | Значения | Описание |
 |----------|----------|----------|
-| `date` | `YYYY-MM-DD` | Фильтр по дате |
-| `type` | `urgent` / `daily` / `info` | Фильтр по типу задачи |
-| `status` | `pending` / `in_progress` / `done` | Фильтр по статусу |
-| `assignee` | `{id}` | Фильтр по исполнителю |
+| date | YYYY-MM-DD | Фильтр по дате |
+| type | urgent / daily / info | Фильтр по типу задачи |
+| status | in_progress / done / pending | Фильтр по статусу |
+| assignee | {id} | Фильтр по исполнителю |
+
+### Типы задач
+
+| Тип | Цвет на календаре | Описание |
+|-----|-------------------|----------|
+| urgent | 🔴 красный | Срочная задача |
+| daily | 🔵 синий | Повседневная задача |
+| info | 🟢 зелёный | Информационная задача |
+
+### Статусы задач
+
+| Статус | Описание |
+|--------|----------|
+| in_progress | В процессе |
+| done | Выполнено |
+| pending | Не взята в работу |
+
+### Роли
+
+| Роль | Возможности |
+|------|-------------|
+| Руководитель (manager) | Видит все задачи, создаёт задачи, регистрирует сотрудников, смотрит статусы |
+| Сотрудник (employee) | Видит только свои задачи, меняет их статус, оставляет комментарии |
+
+### Переменные окружения
+
+| Переменная | Описание | Пример |
+|------------|----------|--------|
+| SECRET_KEY | Секретный ключ Django | django-insecure-... |
+| DEBUG | Режим отладки | False |
+| ALLOWED_HOSTS | Разрешённые хосты | localhost,127.0.0.1 |
+| POSTGRES_DB / NAME | Имя базы данных | task_tracker_db |
+| POSTGRES_USER / USER | Пользователь БД | postgres |
+| POSTGRES_PASSWORD / PASSWORD | Пароль БД | postgres |
+| HOST | Хост БД | db (в Docker), localhost (локально) |
+| PORT | Порт БД | 5432 (в Docker), 5433 (локально) |
+| CORS_ALLOWED_ORIGINS | Разрешённые источники CORS | http://localhost |
 
 ## Примеры запросов
 
 ### Регистрация сотрудника (только manager)
 
-```bash
+```commandline
 curl -X POST http://localhost/api/users/register/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
@@ -186,7 +224,7 @@ curl -X POST http://localhost/api/users/register/ \
 
 **Ответ:**
 
-```json
+```
 {
   "id": 2,
   "phone": "+79991112233",
@@ -198,7 +236,7 @@ curl -X POST http://localhost/api/users/register/ \
 
 ### Создание задачи (только manager)
 
-```bash
+```commandline
 curl -X POST http://localhost/api/tasks/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
@@ -214,18 +252,18 @@ curl -X POST http://localhost/api/tasks/ \
 
 ### Смена статуса задачи (сотрудник)
 
-**Обычная смена статуса** — без комментария:
+Обычная смена статуса — без комментария:
 
-```bash
+```
 curl -X PATCH http://localhost/api/tasks/1/status/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"status": "done"}'
 ```
 
-**Перевод в «не взята в работу»** — комментарий с причиной обязателен:
+Перевод в «не взята в работу» — комментарий с причиной обязателен:
 
-```bash
+```
 curl -X PATCH http://localhost/api/tasks/1/status/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
@@ -234,14 +272,14 @@ curl -X PATCH http://localhost/api/tasks/1/status/ \
 
 ### Важные задачи
 
-```bash
+```
 curl http://localhost/api/tasks/important/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
-**Ответ для руководителя** (с подбором свободных исполнителей):
+Ответ для руководителя (с подбором свободных исполнителей):
 
-```json
+```
 {
   "tasks": [
     {
@@ -259,18 +297,18 @@ curl http://localhost/api/tasks/important/ \
 }
 ```
 
-Ответ для сотрудника — только свои задачи, без `suggested_assignees`.
+Ответ для сотрудника — только свои задачи, без suggested_assignees.
 
 ### Занятые сотрудники (только manager)
 
-```bash
+```
 curl http://localhost/api/users/busy/ \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
-**Ответ:**
+Ответ:
 
-```json
+```
 [
   {
     "id": 2,
@@ -284,17 +322,17 @@ curl http://localhost/api/users/busy/ \
 
 ## Тесты
 
-Проект покрыт **41 тестом**, покрытие — **97%**.
+Проект покрыт тестами (покрытие 97%).
 
 ### Запуск всех тестов
 
-```bash
+```
 python manage.py test
 ```
 
 ### Запуск с покрытием
 
-```bash
+```
 coverage run --source='.' manage.py test
 coverage report
 coverage html  # создаст отчёт htmlcov/index.html
@@ -302,14 +340,14 @@ coverage html  # создаст отчёт htmlcov/index.html
 
 ### Запуск отдельных приложений
 
-```bash
+```
 python manage.py test users
 python manage.py test tasks
 ```
 
 ## Линтинг и форматирование
 
-```bash
+```
 flake8 . --exclude=.venv,migrations,htmlcov --max-line-length=120 --extend-ignore=E203,W503
 black .
 isort .
@@ -317,31 +355,18 @@ isort .
 
 ## CI/CD (GitHub Actions)
 
-Файл `.github/workflows/ci.yml` описывает пайплайн:
+Файл .github/workflows/ci.yml описывает пайплайн:
 
-1. **test** — запускается на push и PR:
+1. test — запускается на push и PR:
    - Поднимает PostgreSQL
    - Устанавливает зависимости
    - Прогоняет flake8
    - Прогоняет тесты с проверкой покрытия (порог 75%)
-2. **deploy** — запускается только при push в `main`:
+
+2. deploy — запускается только при push в main:
    - Подключается по SSH к серверу Yandex Cloud
-   - Делает `git pull` и `docker compose up -d --build`
-
-## Переменные окружения
-
-| Переменная | Описание | Пример |
-|------------|----------|--------|
-| `SECRET_KEY` | Секретный ключ Django | `django-insecure-...` |
-| `DEBUG` | Режим отладки | `False` |
-| `ALLOWED_HOSTS` | Разрешённые хосты | `localhost,127.0.0.1` |
-| `POSTGRES_DB` / `NAME` | Имя базы данных | `task_tracker_db` |
-| `POSTGRES_USER` / `USER` | Пользователь БД | `postgres` |
-| `POSTGRES_PASSWORD` / `PASSWORD` | Пароль БД | `postgres` |
-| `HOST` | Хост БД | `db` (в Docker), `localhost` (локально) |
-| `PORT` | Порт БД | `5432` (в Docker), `5433` (локально) |
-| `CORS_ALLOWED_ORIGINS` | Разрешённые источники CORS | `http://localhost` |
+   - Делает git pull и docker compose up -d --build
 
 ## Автор
 
-**Соколина Ангелина Сергеевна** — дипломный проект, 2026
+_Ангелина Соколовская_

@@ -9,6 +9,7 @@ class TaskType(models.TextChoices):
 
 
 class TaskStatus(models.TextChoices):
+    PENDING = "pending", "Не взята в работу"
     IN_PROGRESS = "in_progress", "В процессе"
     DONE = "done", "Выполнено"
 
@@ -50,8 +51,17 @@ class Task(models.Model):
     status = models.CharField(
         max_length=20,
         choices=TaskStatus.choices,
-        default=TaskStatus.IN_PROGRESS,
+        default=TaskStatus.PENDING,
         verbose_name="Статус",
+    )
+
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="subtasks",
+        verbose_name="Родительская задача",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

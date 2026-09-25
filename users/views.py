@@ -11,6 +11,9 @@ from .serializers import (
     RegisterEmployeeSerializer,
     UserSerializer,
 )
+from django.db.models import Count, Q
+
+from tasks.models import TaskStatus
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -58,3 +61,35 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         """GET /api/users/me/ — текущий пользователь."""
         return Response(UserSerializer(request.user).data)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[IsManager],
+        url_path="busy",
+    )
+    def busy_employees(self, request):
+        """GET /api/users/busy/ — сотрудники, отсортированные по числу активных задач."""
+
+        employees = (
+            CustomUser.objects.filter(role=CustomUser.Role.EMPLOYEE)
+            .annotate(
+                active_tasks=Count(
+                    "assigned_tasks",
+                    filter=~Q(assigned_tasks__status=TaskStatus.DONE),
+                )
+            )
+            .order_by("-active_tasks", "full_name")
+        )
+
+        data = [
+            {
+                "id": emp.id,
+                "full_name": emp.full_name,
+                "position": emp.position,
+                "phone": emp.phone,
+                "active_tasks": emp.active_tasks,
+            }
+            for emp in employees
+        ]
+        return Response(data)

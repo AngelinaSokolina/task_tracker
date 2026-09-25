@@ -1,9 +1,12 @@
 import secrets
 
+from django.db.models import Count, Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from tasks.models import TaskStatus
 
 from .models import CustomUser
 from .serializers import (
@@ -11,9 +14,6 @@ from .serializers import (
     RegisterEmployeeSerializer,
     UserSerializer,
 )
-from django.db.models import Count, Q
-
-from tasks.models import TaskStatus
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

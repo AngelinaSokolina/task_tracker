@@ -9,9 +9,10 @@ class TaskType(models.TextChoices):
 
 
 class TaskStatus(models.TextChoices):
-    PENDING = "pending", "Не взята в работу"
+    PENDING = "pending", "В ожидании"
     IN_PROGRESS = "in_progress", "В процессе"
     DONE = "done", "Выполнено"
+    NOT_TAKEN = "not_taken", "Не взята в работу"
 
 
 class Task(models.Model):

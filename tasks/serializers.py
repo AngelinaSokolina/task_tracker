@@ -42,8 +42,12 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class TaskStatusUpdateSerializer(serializers.ModelSerializer):
     """
-    Для смены статуса сотрудником.
-    Если статус = pending (не взята в работу) — комментарий с причиной обязателен.
+    Смена статуса задачи сотрудником.
+    Сотрудник может поставить только:
+      - in_progress (взять в работу)
+      - done (выполнено)
+      - not_taken (отказаться, комментарий обязателен)
+    Статус pending (в ожидании) — технический, вручную не ставится.
     """
 
     comment = serializers.CharField(
@@ -56,12 +60,22 @@ class TaskStatusUpdateSerializer(serializers.ModelSerializer):
         model = Task
         fields = ["status", "comment"]
 
+    def validate_status(self, value):
+        allowed = [
+            TaskStatus.IN_PROGRESS,
+            TaskStatus.DONE,
+            TaskStatus.NOT_TAKEN,
+        ]
+        if value not in allowed:
+            raise serializers.ValidationError(
+                "Можно поставить только один из статусов: " "in_progress, done, not_taken."
+            )
+        return value
+
     def validate(self, attrs):
         new_status = attrs.get("status")
         comment = attrs.get("comment")
 
-        if new_status == TaskStatus.PENDING and not comment:
-            raise serializers.ValidationError(
-                {"comment": "При переводе задачи в статус «Не взята в работу» " "нужно указать причину в комментарии."}
-            )
+        if new_status == TaskStatus.NOT_TAKEN and not comment:
+            raise serializers.ValidationError({"comment": "При отказе от задачи нужно указать причину в комментарии."})
         return attrs

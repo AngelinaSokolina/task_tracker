@@ -87,7 +87,7 @@ class ParentTaskTests(APITestCase):
 
 
 class StatusWithCommentTests(APITestCase):
-    """Тесты смены статуса с комментарием."""
+    """Тесты смены статуса задачи сотрудником."""
 
     def setUp(self):
         self.manager = CustomUser.objects.create_user(
@@ -108,10 +108,11 @@ class StatusWithCommentTests(APITestCase):
             assignee=self.employee,
             author=self.manager,
             date=date.today(),
-            status=TaskStatus.IN_PROGRESS,
+            status=TaskStatus.PENDING,
         )
 
     def test_set_status_done_without_comment(self):
+        """Сотрудник может отметить задачу как выполненную."""
         self.client.force_authenticate(self.employee)
         url = reverse("tasks-set-status", args=[self.task.id])
         response = self.client.patch(url, {"status": "done"}, format="json")
@@ -119,29 +120,47 @@ class StatusWithCommentTests(APITestCase):
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, TaskStatus.DONE)
 
-    def test_set_pending_without_comment_fails(self):
+    def test_set_in_progress(self):
+        """Сотрудник может взять задачу в работу."""
         self.client.force_authenticate(self.employee)
         url = reverse("tasks-set-status", args=[self.task.id])
-        response = self.client.patch(url, {"status": "pending"}, format="json")
+        response = self.client.patch(url, {"status": "in_progress"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, TaskStatus.IN_PROGRESS)
+
+    def test_not_taken_without_comment_fails(self):
+        """Отказ от задачи без комментария — 400."""
+        self.client.force_authenticate(self.employee)
+        url = reverse("tasks-set-status", args=[self.task.id])
+        response = self.client.patch(url, {"status": "not_taken"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("comment", response.data)
 
-    def test_set_pending_with_comment_creates_comment(self):
+    def test_not_taken_with_comment_creates_comment(self):
+        """Отказ от задачи с комментарием создаёт комментарий."""
         self.client.force_authenticate(self.employee)
         url = reverse("tasks-set-status", args=[self.task.id])
         response = self.client.patch(
             url,
             {
-                "status": "pending",
+                "status": "not_taken",
                 "comment": "Загружен другой задачей",
             },
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.task.refresh_from_db()
-        self.assertEqual(self.task.status, TaskStatus.PENDING)
+        self.assertEqual(self.task.status, TaskStatus.NOT_TAKEN)
         self.assertEqual(self.task.comments.count(), 1)
         self.assertEqual(self.task.comments.first().author, self.employee)
+
+    def test_cannot_set_pending_manually(self):
+        """Статус pending вручную ставить нельзя — 400."""
+        self.client.force_authenticate(self.employee)
+        url = reverse("tasks-set-status", args=[self.task.id])
+        response = self.client.patch(url, {"status": "pending"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class BusyEmployeesTests(APITestCase):
@@ -166,7 +185,6 @@ class BusyEmployeesTests(APITestCase):
             full_name="Свободен",
             role=CustomUser.Role.EMPLOYEE,
         )
-        # employee1 — 2 активные задачи
         for i in range(2):
             Task.objects.create(
                 title=f"Задача {i}",
@@ -175,7 +193,6 @@ class BusyEmployeesTests(APITestCase):
                 author=self.manager,
                 date=date.today(),
             )
-        # employee2 — только выполненная (не считается)
         Task.objects.create(
             title="Готово",
             type=TaskType.DAILY,
@@ -224,7 +241,6 @@ class ImportantTasksTests(APITestCase):
             full_name="Другой",
             role=CustomUser.Role.EMPLOYEE,
         )
-        # Срочная задача для employee
         Task.objects.create(
             title="Срочная",
             type=TaskType.URGENT,
@@ -232,7 +248,6 @@ class ImportantTasksTests(APITestCase):
             author=self.manager,
             date=date.today(),
         )
-        # Просроченная задача для other
         Task.objects.create(
             title="Просрочка",
             type=TaskType.DAILY,
@@ -240,7 +255,6 @@ class ImportantTasksTests(APITestCase):
             author=self.manager,
             date=date.today() - timedelta(days=3),
         )
-        # Обычная будущая — не важная
         Task.objects.create(
             title="Обычная",
             type=TaskType.INFO,
@@ -248,7 +262,6 @@ class ImportantTasksTests(APITestCase):
             author=self.manager,
             date=date.today() + timedelta(days=5),
         )
-        # Выполненная срочная — не важная
         Task.objects.create(
             title="Готово",
             type=TaskType.URGENT,
@@ -269,7 +282,6 @@ class ImportantTasksTests(APITestCase):
         self.client.force_authenticate(self.employee)
         response = self.client.get(reverse("tasks-important"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Только своя срочная
         self.assertEqual(len(response.data["tasks"]), 1)
         self.assertNotIn("suggested_assignees", response.data)
 

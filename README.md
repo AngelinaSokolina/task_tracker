@@ -4,7 +4,7 @@ Backend-сервис для трекера задач сотрудников. Р
 
 ## Стек технологий
 
-- **Python 3.12** + **Django 6.0**
+- **Python 3.14** + **Django 6.0**
 - **Django REST Framework** — API
 - **PostgreSQL 15** — база данных
 - **JWT** (`djangorestframework-simplejwt`) — авторизация по номеру телефона
